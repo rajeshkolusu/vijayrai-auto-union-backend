@@ -2,21 +2,37 @@ const express = require("express");
 const router = express.Router();
 const Driver = require("../models/Driver");
 const upload = require("../middleware/upload");
+const cloudinary = require("../config/cloudinary");
+const streamifier = require("streamifier");
 
 /**
  * ✅ Upload driver profile image
  * POST /api/drivers/upload
  */
-router.post("/upload", upload.single("image"), (req, res) => {
+router.post("/upload", upload.single("image"), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: "No image uploaded" });
     }
 
-    const imageUrl = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
-    return res.json({ imageUrl });
+    const uploadStream = cloudinary.uploader.upload_stream(
+      { folder: "auto-union-drivers" },
+      (error, result) => {
+        if (error) {
+          console.error("Cloudinary error:", error);
+          return res.status(500).json({
+            message: "Cloudinary upload failed",
+            error: error.message || error,
+          });
+        }
+
+        return res.json({ imageUrl: result.secure_url });
+      },
+    );
+
+    streamifier.createReadStream(req.file.buffer).pipe(uploadStream);
   } catch (err) {
-    return res.status(500).json({ message: err.message || "Upload failed" });
+    return res.status(500).json({ message: "Upload failed" });
   }
 });
 
@@ -54,7 +70,15 @@ router.get("/", async (req, res) => {
  */
 router.post("/register", async (req, res) => {
   try {
-    const { name, mobile, email, vehicleNumber, imageUrl, upiId } = req.body;
+    const {
+      name,
+      mobile,
+      email,
+      vehicleNumber,
+      imageUrl,
+      upiId,
+      vehicleCategory,
+    } = req.body;
 
     if (!name || !mobile || !vehicleNumber) {
       return res.status(400).json({
@@ -69,6 +93,7 @@ router.post("/register", async (req, res) => {
       vehicleNumber,
       imageUrl,
       upiId,
+      vehicleCategory,
       status: "pending",
       isDeleted: false,
     });

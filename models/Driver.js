@@ -18,6 +18,12 @@ const driverSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    vehicleCategory: {
+      type: String,
+      required: true,
+      enum: ["Passenger", "Goods Carrier"], // Restricts values to only these two options
+      default: "Passenger",
+    },
     imageUrl: {
       type: String,
     },
@@ -39,5 +45,4 @@ const driverSchema = new mongoose.Schema(
     timestamps: true,
   },
 );
-
 module.exports = mongoose.model("Driver", driverSchema);

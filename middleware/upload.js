@@ -1,17 +1,7 @@
 const multer = require("multer");
-const path = require("path");
-
-// ✅ Where to store files + unique name
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "uploads/"); // backend/uploads
-  },
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    const safeName = file.fieldname + "-" + Date.now() + ext;
-    cb(null, safeName);
-  },
-});
+0;
+// ✅ Use memory storage (for Cloudinary upload)
+const storage = multer.memoryStorage();
 
 // ✅ Allow only image files
 const fileFilter = (req, file, cb) => {
@@ -23,7 +13,7 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({
   storage,
   fileFilter,
-  limits: { fileSize: 2 * 1024 * 1024 }, // ✅ 2MB limit
+  limits: { fileSize: 2 * 1024 * 1024 }, // 2MB limit
 });
 
 module.exports = upload;

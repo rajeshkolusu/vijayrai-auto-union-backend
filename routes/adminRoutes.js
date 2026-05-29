@@ -14,13 +14,25 @@ router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    // 1. See what the frontend browser sent to the server
+    console.log("--- ADMIN LOGIN ATTEMPT ---");
+    console.log("Frontend sent email:", email);
+    console.log("Frontend sent password:", password);
+
     const admin = await Admin.findOne({ email });
     if (!admin) {
+      console.log("Result: No admin found in database with that email.");
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
+    console.log("Database admin record found:", admin);
+
+    // 2. See if bcryptjs matches them
     const isMatch = await bcrypt.compare(password, admin.password);
+    console.log("Bcryptjs match result:", isMatch);
+
     if (!isMatch) {
+      console.log("Result: Password mismatch.");
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
@@ -28,11 +40,13 @@ router.post("/login", async (req, res) => {
       expiresIn: "1d",
     });
 
+    console.log("Result: Login Successful! Token generated.");
     res.json({
       message: "Login successful",
       token,
     });
   } catch (error) {
+    console.error("Login route error:", error);
     res.status(500).json({ message: "Server error" });
   }
 });
